@@ -1,4 +1,5 @@
 const fs = require('fs');
+const b64 = require('base64-async');
 const zlib = require('zlib');
 const moment = require('moment');
 
@@ -13,17 +14,34 @@ const createDir = (path) => {
   }
 }
 
-const compress = (r, w) => {r.pipe(gzip).pipe(w)};
-
-const saveToFile = async function (items) {
-  const content = JSON.stringify(items);
-  const compressedContent = zlib.gzip(content, function (error, result) {
-     if (error) throw error;
-       console.log(result);
+const compressFile = (path) => {
+  console.log('compressing file');
+  return new Promise(resolve => {
+    resolve(fs.createReadStream(path).pipe(gzip)
+    .pipe(fs.createWriteStream(path + '.gz')));
   });
+};
 
-  const currentDate = moment();
-  const currentTime = currentDate.format('HH_mm_ss');
+const readFileToEncode = (path) => {
+  console.log('reading file from path: ' + path);
+  return new Promise(resolve => {
+    resolve(fs.readFileSync(path));
+  })
+  .then((buffer) => {
+    b64.decode(b64String).then(buffer => console.log(buffer))
+  })//console.log("RESOLVED"))
+  .catch(() => console.log("REJECTED"));
+};
+
+const encodeFile = (buffer) => {
+  console.log(path+'encoding file: ' + buffer);
+  return new Promise((resolve, reject) => {
+    resolve(b64.encode(buffer));
+    reject(new Error("…"));
+  });
+};
+
+const createDirName = (currentDate) => {
   const dir = './fifthTaskFiles/';
   createDir(dir);
   let currentPath = dir + currentDate.format('YYYY') + 'b';
@@ -32,24 +50,34 @@ const saveToFile = async function (items) {
   createDir(currentPath);
   currentPath = currentPath + '/' + currentDate.format('DD');
   createDir(currentPath);
+  return currentPath;
+}
 
-  const filenameWithPath = currentPath + '/' + currentTime + '_items.json'
+const saveToFile = (content) => {
+  const currentDate = moment();
+  const currentTime = currentDate.format('HH_mm_ss');
+  const path = createDirName(currentDate);
+  const filenameWithPath = path + '/' + currentTime + '_items.json'
+  const filenameToEncode = filenameWithPath + '.gz'
 
-  const f = await fs.writeFile(filenameWithPath, content,
+  const f = fs.writeFile(filenameWithPath, content,
     function (e) {
       if (e) throw e;
       console.log('File is created successfully.');
-  });
+  })
+  return {filenameWithPath, filenameToEncode}
+};
 
-  const r = await fs.createReadStream(filenameWithPath);
-  const w = await fs.createWriteStream(filenameWithPath + '.gz');
-  const c = await compress(r, w);
-
-  const filenameToEncode = filenameWithPath + '.gz'
-  console.log('path: ' + filenameToEncode);
-  const fileToEncode = await fs.readFileSync(filenameToEncode);
-  async()=>(await fileToEncode.toString('base64'))
-  async()=>console.log(await 'file: ' + fi);
+const getBuffer = async function(filenameWithPath, filenameToEncode) {
+  const file = await compressFile(filenameWithPath);
+  const buffer = await readFileToEncode(filenameToEncode)
+  console.log(buffer)
+  return buffer;
 }
 
-saveToFile(items);
+const filePaths = saveToFile(JSON.stringify(items));
+const buffer = getBuffer(filePaths.filenameWithPath, filePaths.filenameToEncode)
+console.log(typeof(buffer))
+// const b64String = b64.encode(buffer)
+// console.log(b64String)
+// /console.log(filePaths.filenameWithPath + ' ' + filePaths.filenameToEncode + ' ' + buffer);
