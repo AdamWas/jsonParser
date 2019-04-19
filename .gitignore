@@ -1,1 +1,5 @@
 node_modules/
+fifthTaskFiles/
+encode.js
+?_items.json.gz
+?_items.json
