@@ -1,4 +1,5 @@
-const _ = require('lodash')
+const _ = require('lodash');
+const Schema = require('validate');
 
 const {itemsMod} = require('./itemsMod');
 
@@ -12,7 +13,31 @@ const IsJsonStr = json => {
     return true;
 };
 
-console.log('Valid JSON:')
+const itemsData = new Schema({
+  items: {
+    data: [{
+      type: {
+        type: String,
+        required: true,
+        length: {min:1, max:2}
+      },
+      pos: {
+        type: Array,
+        each: { type: Number }
+      },
+      cost: {
+        type: Number,
+        required: true
+      },
+      amount: {
+        type: Number,
+        required: true
+      }
+    }]
+  }
+})
+
+console.log('Valid JSON (lodash):')
 console.log(IsJsonStr(itemsMod));
 
 if (IsJsonStr(itemsMod)) {
@@ -34,3 +59,7 @@ if (IsJsonStr(itemsMod)) {
 } else {
   console.log('Invalid JSON!');
 };
+
+console.log('Valid JSON (validate):')
+const errors = itemsData.validate(itemsMod)
+console.log(errors.length > 0 ? errors : 'Valid object');
